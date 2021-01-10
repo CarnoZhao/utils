@@ -1,0 +1,6 @@
+[submodule "detect/det_metric"]
+	path = detect/det_metric
+	url = https://github.com/rafaelpadilla/Object-Detection-Metrics
+[submodule "detect/effdet"]
+	path = detect/effdet
+	url = https://github.com/rwightman/efficientdet-pytorch
