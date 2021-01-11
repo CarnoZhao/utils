@@ -4,3 +4,6 @@
 [submodule "detect/effdet"]
 	path = detect/effdet
 	url = https://github.com/rwightman/efficientdet-pytorch
+[submodule "optim"]
+	path = optim
+	url = https://github.com/mgrankin/over9000.git
