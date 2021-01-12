@@ -8,7 +8,7 @@ def make_file_path(file_path):
     basepath = os.path.split(os.path.realpath(file_path))[0]
     fullpath = os.path.realpath(file_path)
     filename = os.path.split(os.path.realpath(file_path))[1]
-    t = time.strftime("%b.%d_%H:%M", time.localtime())
+    t = time.strftime("%b%d%H%M", time.localtime())
     os.system("mkdir -p _archives _outs _models/%s/best _models/%s/final; cp %s %s/_archives/%s.py" % (t, t, fullpath, basepath, t))
     modelpath = os.path.join(basepath, "_models", "%s.pt" % t)
     # plotpath = os.path.join(basepath, "_plots", "%s.png" % t)
