@@ -34,17 +34,19 @@ class CRBlock(nn.Module):
     def __init__(self, n_c = 64):
         super(CRBlock, self).__init__()
         self.conv = ConvBN(n_c, n_c, (3, 3))
+        self.dec0 = ResoBlock(n_c, 3)
         self.dec1 = ResoBlock(n_c, 5)
         self.dec2 = ResoBlock(n_c, 7)
         self.dec3 = ResoBlock(n_c, 9)
-        self.merge = ConvBN(n_c * 3, n_c, (1, 1))
+        self.merge = ConvBN(n_c * 4, n_c, (1, 1))
  
     def forward(self, x):
-        x1 = self.conv(x)
-        x2 = self.dec1(x1)
-        x3 = self.dec2(x1)
-        x4 = self.dec3(x1)
-        x5 = torch.cat([x2, x3, x4], 1)
+        x0 = self.conv(x)
+        x1 = self.dec0(x0)
+        x2 = self.dec1(x0)
+        x3 = self.dec2(x0)
+        x4 = self.dec3(x0)
+        x5 = torch.cat([x1, x2, x3, x4], 1)
         x5 = self.merge(x5)
         return x5 + x
  
@@ -54,10 +56,11 @@ class CREncoder(nn.Module):
     def __init__(self, bits, dim1 = 24, dim2 = 16, n_c = 64, drop = 0):
         super(CREncoder, self).__init__()
         self.conv1 = ConvBN(2, n_c, (3, 3))
+        self.enc0 = ResoBlock(n_c, 3)
         self.enc1 = ResoBlock(n_c, 5)
         self.enc2 = ResoBlock(n_c, 7)
         self.enc3 = ResoBlock(n_c, 9)
-        self.merge = ConvBN(n_c * 4, 2, (1, 1))
+        self.merge = ConvBN(n_c * 5, 2, (1, 1))
         self.fc = nn.Sequential(
             nn.Dropout(drop),
             nn.Linear(2 * dim1 * dim2, int(bits / self.B)),
@@ -66,10 +69,11 @@ class CREncoder(nn.Module):
  
     def forward(self, x):
         x = self.conv1(x)
+        x0 = self.enc0(x)
         x1 = self.enc1(x)
         x2 = self.enc2(x)
         x3 = self.enc3(x)
-        x4 = torch.cat([x, x1, x2, x3], 1)
+        x4 = torch.cat([x, x0, x1, x2, x3], 1)
         x4 = self.merge(x4)
         x4 = x4.view(x4.shape[0], -1)
         x4 = self.fc(x4)
@@ -89,7 +93,7 @@ class CRDecoder(nn.Module):
         self.dec = nn.Sequential(
             ConvBN(2, n_c, (3, 3)),
             CRBlock(),
-            # CRBlock()
+            CRBlock()
         )
         self.conv = nn.Conv2d(n_c, 2, (3, 3), 1, 1, bias = False)
  
