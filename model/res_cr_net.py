@@ -128,6 +128,7 @@ class CRDecoder(nn.Module):
         self.dim2 = dim2
         self.fc = nn.Sequential(
             nn.Linear(int(bits / self.B), 4 * dim1 * dim2),
+            Mish(),
             nn.Dropout(drop)
         )
         self.dec = nn.Sequential(
