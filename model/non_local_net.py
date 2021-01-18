@@ -21,7 +21,11 @@ class NonLocalBlock(nn.Module):
         self.conv1 = ConvBN(in_c, n_c, (3, 3))
         self.conv2 = ConvBN(in_c, n_c, (3, 3))
         self.conv3 = ConvBN(in_c, n_c, (3, 3))
-        self.conv4 = nn.ConvTranspose2d(n_c, in_c, (3, 3))
+        self.conv4 = nn.Sequential(
+            nn.ConvTranspose2d(n_c, in_c, (3, 3)),
+            nn.BatchNorm2d(in_c),
+            nn.LeakyReLU()
+        )
 
     def forward(self, x):
         x1 = self.conv1(x)

@@ -1,6 +1,7 @@
+from utils.model.non_local_net import NonLocalBlock
 import torch
 import torch.nn as nn
-from ..acti.mish import Mish
+from utils.acti.mish import Mish
 
 class ConvBN(nn.Module):
     def __init__(self, in_c, out_c, size):
@@ -93,6 +94,7 @@ class CREncoder(nn.Module):
     def __init__(self, bits, dim1 = 24, dim2 = 16, n_c = 64, drop = 0):
         super(CREncoder, self).__init__()
         self.conv1 = ConvBN(2, n_c, (3, 3))
+        self.nlb = NonLocalBlock(n_c, n_c)
         self.enc1 = ConvBlock(n_c)
         self.enc2 = nn.Sequential(
             ConvBN(n_c, n_c, (1, 5)),
@@ -111,6 +113,7 @@ class CREncoder(nn.Module):
  
     def forward(self, x):
         x = self.conv1(x)
+        x = self.nlb(x)
         x1 = self.enc1(x)
         x2 = self.enc2(x)
         x = torch.cat([x1, x2], 1)
@@ -133,6 +136,7 @@ class CRDecoder(nn.Module):
         )
         self.dec = nn.Sequential(
             ConvBN(4, n_c, (3, 3)),
+            NonLocalBlock(n_c, n_c),
             CRBlock(),
             CRBlock()
         )
