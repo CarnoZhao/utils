@@ -51,14 +51,12 @@ class CREncoder(nn.Module):
             residual = out
             out = self.multiConvs2[i](out)
             out = residual + out
-            out = self.relu(out)
 
         out = self.multiConvs5[0](out)
         for i in range(1, self.conv5nums + 1):
             residual = out
             out = self.multiConvs5[i](out)
             out = residual + out
-            out = self.relu(out)
         out = out.view(-1, 768 * 2)
         out = self.fc(out)
         out = self.sig(out)
@@ -113,14 +111,12 @@ class CRDecoder(nn.Module):
             residual = out
             out = self.multiConvs2[i](out)
             out = residual + out
-            out = self.relu(out)
 
         out = self.multiConvs5[0](out)
         for i in range(1, self.conv5nums + 1):
             residual = out
             out = self.multiConvs5[i](out)
             out = residual + out
-            out = self.relu(out)
 
         out = self.out_cov(out)
         return out 
