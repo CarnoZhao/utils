@@ -79,7 +79,8 @@ class CRDecoder(nn.Module):
         self.multiConvs5 = nn.ModuleList()
 
         self.fc = nn.Linear(int(feedback_bits / self.B), 768 * 2)
-        self.out_cov = conv3x3(2, 2)
+        # self.out_cov = conv3x3(2, 2)
+        self.out_cov = conv3x3(32, 2)
         self.sig = nn.LeakyReLU(0.3)
 
         self.multiConvs2.append(nn.Sequential(
@@ -88,7 +89,8 @@ class CRDecoder(nn.Module):
         self.multiConvs5.append(nn.Sequential(
                 *convbn(256, 128),
                 *convbn(128, 32),
-                *convbn(32, 2)))
+            # *convbn(32, 2)
+        ))
 
         for _ in range(self.conv2nums):
             self.multiConvs2.append(nn.Sequential(
@@ -97,9 +99,12 @@ class CRDecoder(nn.Module):
                 *convbn(64, 256)))
         for _ in range(self.conv5nums):
             self.multiConvs5.append(nn.Sequential(
-                *convbn(2, 32),
+                # *convbn(2, 32),
+                # *convbn(32, 32),
                 *convbn(32, 32),
-                *convbn(32, 2)))
+                # *convbn(32, 2),
+                *convbn(32, 32)
+            ))
 
     def forward(self, x):
         # out = x.view(-1, 2, 12, 8)
