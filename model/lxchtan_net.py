@@ -7,8 +7,8 @@ import math
 
 def conv3x3(in_planes, out_planes, stride=1):
     """3x3 convolution with padding"""
-    return nn.Conv2d(in_planes, out_planes, kernel_size=3, stride=stride,
-                     padding=1, bias=True)
+    return nn.Conv2d(in_planes, out_planes, kernel_size=3, stride=stride, padding=1, bias=True)
+    # return nn.Conv2d(in_planes, out_planes, kernel_size = (1, 3), padding = (0, 1))
 
 def convbn(in_planes, out_planes):
     return conv3x3(in_planes, out_planes), nn.BatchNorm2d(out_planes), nn.LeakyReLU(0.3)
@@ -72,38 +72,38 @@ class CRDecoder(nn.Module):
         self.feedback_bits = feedback_bits
         self.relu = nn.LeakyReLU(0.3)
 
-        self.conv2nums = 5
-        self.conv5nums = 2
+        self.conv2nums = 7
+        self.conv5nums = 4
 
         self.multiConvs2 = nn.ModuleList()
         self.multiConvs5 = nn.ModuleList()
 
         self.fc = nn.Linear(int(feedback_bits / self.B), 768 * 2)
         # self.out_cov = conv3x3(2, 2)
-        self.out_cov = conv3x3(32, 2)
+        self.out_cov = conv3x3(64, 2)
         self.sig = nn.LeakyReLU(0.3)
 
         self.multiConvs2.append(nn.Sequential(
                 *convbn(4, 64),
-                *convbn(64, 256)))
+                *convbn(64, 384)))
         self.multiConvs5.append(nn.Sequential(
-                *convbn(256, 128),
-                *convbn(128, 32),
+                *convbn(384, 128),
+                *convbn(128, 64),
             # *convbn(32, 2)
         ))
 
         for _ in range(self.conv2nums):
             self.multiConvs2.append(nn.Sequential(
-                *convbn(256, 64),
+                *convbn(384, 64),
                 *convbn(64, 64),
-                *convbn(64, 256)))
+                *convbn(64, 384)))
         for _ in range(self.conv5nums):
             self.multiConvs5.append(nn.Sequential(
                 # *convbn(2, 32),
                 # *convbn(32, 32),
-                *convbn(32, 32),
+                *convbn(64, 64),
                 # *convbn(32, 2),
-                *convbn(32, 32)
+                *convbn(64, 64)
             ))
 
     def forward(self, x):
