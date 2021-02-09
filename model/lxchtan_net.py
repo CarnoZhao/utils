@@ -13,13 +13,13 @@ def conv3x3(in_planes, out_planes, stride=1):
 def convbn(in_planes, out_planes):
     return conv3x3(in_planes, out_planes), nn.BatchNorm2d(out_planes), nn.LeakyReLU(0.3)
 
+mid_channel = 4
 # create your own CREncoder
 class CREncoder(nn.Module):
-    B = 4
+    B = 3
 
     def __init__(self, feedback_bits):
         super(CREncoder, self).__init__()
-        self.fc = nn.Linear(768 * 2, int(feedback_bits / self.B))
         self.sig = nn.Sigmoid()
         self.relu = nn.LeakyReLU(0.3)
 
@@ -33,7 +33,7 @@ class CREncoder(nn.Module):
         self.multiConvs5.append(nn.Sequential(
                 *convbn(256, 128),
                 *convbn(128, 32),
-                *convbn(32, 4)))
+                *convbn(32, mid_channel)))
         for _ in range(self.conv2nums):
             self.multiConvs2.append(nn.Sequential(
                 *convbn(256, 64),
@@ -41,9 +41,10 @@ class CREncoder(nn.Module):
                 *convbn(64, 256)))
         for _ in range(self.conv5nums):
             self.multiConvs5.append(nn.Sequential(
-                *convbn(4, 32),
+                *convbn(mid_channel, 32),
                 *convbn(32, 32),
-                *convbn(32, 4)))
+                *convbn(32, mid_channel)))
+        self.fc = nn.Linear(384 * mid_channel, int(feedback_bits / self.B))
 
     def forward(self, x):
         out = self.multiConvs2[0](x)
@@ -57,7 +58,7 @@ class CREncoder(nn.Module):
             residual = out
             out = self.multiConvs5[i](out)
             out = residual + out
-        out = out.view(-1, 768 * 2)
+        out = out.reshape(-1, 384 * mid_channel)
         out = self.fc(out)
         out = self.sig(out)
         return out
@@ -65,51 +66,46 @@ class CREncoder(nn.Module):
 
 # create your own Decoder
 class CRDecoder(nn.Module):
-    B = 4
+    B = 3
 
     def __init__(self, feedback_bits):
         super(CRDecoder, self).__init__()
         self.feedback_bits = feedback_bits
         self.relu = nn.LeakyReLU(0.3)
 
-        self.conv2nums = 7
-        self.conv5nums = 4
+        self.conv2nums = 6
+        self.conv5nums = 3
 
         self.multiConvs2 = nn.ModuleList()
         self.multiConvs5 = nn.ModuleList()
 
-        self.fc = nn.Linear(int(feedback_bits / self.B), 768 * 2)
-        # self.out_cov = conv3x3(2, 2)
-        self.out_cov = conv3x3(64, 2)
+        self.fc = nn.Linear(int(feedback_bits / self.B), 384 * mid_channel)
+        self.out_cov = conv3x3(128, 2)
         self.sig = nn.LeakyReLU(0.3)
 
         self.multiConvs2.append(nn.Sequential(
-                *convbn(4, 64),
-                *convbn(64, 384)))
+            *convbn(mid_channel, 64),
+            *convbn(64, 384),
+        ))
         self.multiConvs5.append(nn.Sequential(
-                *convbn(384, 128),
-                *convbn(128, 64),
-            # *convbn(32, 2)
+            *convbn(384, 128),
+            *convbn(128, 128),
         ))
 
         for _ in range(self.conv2nums):
             self.multiConvs2.append(nn.Sequential(
-                *convbn(384, 64),
-                *convbn(64, 64),
-                *convbn(64, 384)))
+                *convbn(384, 384),
+                *convbn(384, 384)
+            ))
         for _ in range(self.conv5nums):
             self.multiConvs5.append(nn.Sequential(
-                # *convbn(2, 32),
-                # *convbn(32, 32),
-                *convbn(64, 64),
-                # *convbn(32, 2),
-                *convbn(64, 64)
+                *convbn(128, 128),
+                *convbn(128, 128)
             ))
 
     def forward(self, x):
-        # out = x.view(-1, 2, 12, 8)
         out = self.sig(self.fc(x))
-        out = out.view(-1, 4, 24, 16)
+        out = out.view(-1, mid_channel, 24, 16)
 
         out = self.multiConvs2[0](out)
         for i in range(1, self.conv2nums + 1):
@@ -125,6 +121,7 @@ class CRDecoder(nn.Module):
 
         out = self.out_cov(out)
         return out 
+        
 if __name__ == "__main__":
     from torchviz import make_dot
     e = CREncoder(400)
