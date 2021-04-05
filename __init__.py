@@ -4,12 +4,15 @@ import torch
 import numpy as np
 import random
 
-def make_file_path(file_path):
+def make_file_path(file_path, is_pl = False):
     basepath = os.path.split(os.path.realpath(file_path))[0]
     fullpath = os.path.realpath(file_path)
     filename = os.path.split(os.path.realpath(file_path))[1]
     t = time.strftime("%b%d%H%M", time.localtime())
-    os.system("mkdir -p _archives _outs _models/%s/best _models/%s/final; cp %s %s/_archives/%s.py" % (t, t, fullpath, basepath, t))
+    os.system("mkdir -p _archives _outs")
+    if not is_pl:
+        os.system("mkdir -p _models/%s/best _models/%s/final" % (t, t))
+    os.system("cp %s %s/_archives/%s.py" % (fullpath, basepath, t))
     modelpath = os.path.join(basepath, "_models", "%s.pt" % t)
     # plotpath = os.path.join(basepath, "_plots", "%s.png" % t)
     outpath = os.path.join(basepath, "_outs", "%s.out" % t)
