@@ -255,7 +255,7 @@ class SymLovaszLoss(torch.nn.Module):
 
     def forward(self, logit, target):
         if logit.shape[1] == 1:
-            logit = logit.sigmoid()
+            # logit = logit.sigmoid()
             return symmetric_lovasz(logit, target)
         else:
             logit = logit.softmax(1)

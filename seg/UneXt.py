@@ -98,7 +98,8 @@ class UneXt50(nn.Module):
         #encoder
         m = ResNet(Bottleneck, [3, 4, 6, 3], groups=32, width_per_group=4)
         if pretrained:
-            m = torch.hub.load('facebookresearch/semi-supervised-ImageNet1K-models', 'resnext50_32x4d_ssl')
+            stt = torch.hub.load('facebookresearch/semi-supervised-ImageNet1K-models', 'resnext50_32x4d_ssl').state_dict()
+            m.load_state_dict(stt)
         self.enc0 = nn.Sequential(m.conv1, m.bn1, nn.ReLU(inplace=True))
         self.enc1 = nn.Sequential(nn.MaxPool2d(kernel_size=3, stride=2, padding=1, dilation=1),
                             m.layer1) #256
