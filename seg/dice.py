@@ -168,11 +168,13 @@ class IOULoss(torch.nn.Module):
         return iou_loss(target, logits)
 
 class TverskyLoss(torch.nn.Module):
-    def __init__(self):
+    def __init__(self, alpha = 0.3, beta = 0.7):
         super(TverskyLoss, self).__init__()
+        self.alpha = alpha
+        self.beta = beta
 
     def forward(self, logits, target):
-        return tversky_loss(target, logits, alpha = 0.3, beta = 0.7)
+        return tversky_loss(target, logits, alpha = self.alpha, beta = self.beta)
 
 class SqueezeBCELoss(torch.nn.Module):
     def __init__(self):
