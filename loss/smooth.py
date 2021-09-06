@@ -24,5 +24,5 @@ class SoftCrossEntropyLoss(nn.Module):
 
     def forward(self, pred, target):
         pred = pred.log_softmax(dim = -1)
-        target = target.softmax(dim = -1)
+        # target = target.softmax(dim = -1)
         return torch.mean(torch.sum(-target * pred, dim = -1))
