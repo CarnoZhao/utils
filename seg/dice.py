@@ -1,5 +1,6 @@
 import torch
 import torch.nn.functional as F
+from ..loss.smooth import LabelSmoothingLoss
 
 def dice_loss(true, logits, eps=1e-7):
     """Computes the Sørensen–Dice loss.
@@ -184,3 +185,20 @@ class SqueezeBCELoss(torch.nn.Module):
     def forward(self, logits, target):
         target = target.unsqueeze(1).float()
         return self.bce(logits, target)
+
+class DiceCELoss(torch.nn.Module):
+    def __init__(self, w = 0.75, smoothing = 0, num_classes = 1):
+        super(DiceCELoss, self).__init__()
+        if num_classes == 1:
+            self.ce = SqueezeBCELoss()
+        elif smoothing == 0:
+            self.ce = torch.nn.CrossEntropyLoss()
+        else:
+            self.ce = LabelSmoothingLoss(classes = num_classes, smoothing = smoothing, unsqueeze = False, dim = 1)
+        self.dice = DiceLoss()
+        self.w = w
+
+    def forward(self, logits, target):
+        ce_loss = self.ce(logits, target)
+        dice_loss = self.dice(logits, target)
+        return self.w * dice_loss + (1 - self.w) * ce_loss
